@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, jsonify, abort, session
 from flask_cors import CORS, cross_origin
 import sqlite3
-import MySQLdb
 from datetime import datetime
 from datetime import datetime
 import smtplib
