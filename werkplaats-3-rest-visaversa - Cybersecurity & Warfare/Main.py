@@ -6,13 +6,19 @@ from datetime import datetime
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    submit = SubmitField('Login')
 
 def row_to_event(row):
     event = {}
@@ -61,7 +67,7 @@ def chart_data():
 
 @app.route('/')
 def index():
- 
+    form = LoginForm()
     conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT rol FROM personen")
@@ -72,14 +78,15 @@ def index():
     if 'username' in session:
         return redirect(url_for('hometeacher'))
     else:
-        return render_template('login.html', student_count=result)
+        return render_template('login.html', student_count=result, form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    form = LoginForm()
     error = None
-    if request.method == 'POST':
-        user = request.form['username']
-        passwd = request.form['password']
+    if form.validate_on_submit():
+        user = form.username.data
+        passwd = form.password.data
         conn = sqlite3.connect('Database.db')
         c = conn.cursor()
         c.execute(
@@ -103,7 +110,7 @@ def login():
             elif rol_check == 'Admin':
                 session["is_admin"] = True
                 return redirect(url_for('home'))
-
+        return render_template('login.html', form=form, error=error)
 
 @app.route('/home')
 def home():
